@@ -39,13 +39,6 @@ allBlankSudoku = Sudoku [[Nothing | _ <- [1..9]] | _ <- [1..9]]
 
 -- * A2
 
--- | isSudoku sud checks if sud is really a valid representation of a sudoku
--- puzzle
--- rows has a lenght of 9 -> loopa igenom alla rader och kolla att de är 9
--- number of row = 9 -> lterally length
--- check if the number in the cell is between 1 and 9 -> that double loop
--- 
-
 isSudoku :: Sudoku -> Bool
 isSudoku (Sudoku rows) = (length rows) == 9 && checkRows rows
   where
@@ -56,20 +49,16 @@ isSudoku (Sudoku rows) = (length rows) == 9 && checkRows rows
     checkCells (Just n:restOfCells) | n > 0 && n < 10 = checkCells restOfCells
                                     | otherwise       = False 
 
-
-
-
-
--- isSudoku (Sudoku []) = False
--- isSudoku allBlankSudoku = True
--- isSudoku example = True
--- isSudoku (Sudoku (tail (rows example)) = False
 -- * A3
 
--- | isFilled sud checks if sud is completely filled in,
--- i.e. there are no blanks
 isFilled :: Sudoku -> Bool
-isFilled = undefined
+isFilled (Sudoku rows)= checkFilledRows rows
+  where
+    checkFilledRows []                      = True
+    checkFilledRows (currentRow:restOfRows) = checkFilledCells currentRow && checkFilledRows restOfRows
+    checkFilledCells []                     = True
+    checkFilledCells (Nothing:restOfCells)  = False
+    checkFilledCells (Just _:restOfCells)   = checkFilledCells restOfCells
 
 ------------------------------------------------------------------------------
 
