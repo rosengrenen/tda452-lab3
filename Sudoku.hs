@@ -130,7 +130,7 @@ printRandomSudoku = do
 -- * C3
 
 prop_Sudoku :: Sudoku -> Bool
-prop_Sudoku = undefined
+prop_Sudoku = isSudoku
   -- hint: this definition is simple!
   
 ------------------------------------------------------------------------------
