@@ -113,7 +113,17 @@ cell = frequency [(9, nothings), (1, justs)]
 
 -- | an instance for generating Arbitrary Sudokus
 instance Arbitrary Sudoku where
-  arbitrary = undefined
+  arbitrary = do
+    rows <- vectorOf 9 $ vectorOf 9 cell
+    return $ Sudoku rows
+
+printRandomSudoku :: IO ()
+printRandomSudoku = do
+  sud <- kek
+  printSudoku sud
+  where
+    kek :: IO Sudoku
+    kek = generate arbitrary
 
  -- hint: get to know the QuickCheck function vectorOf
  
