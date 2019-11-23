@@ -1,5 +1,7 @@
-module Sudoku where
+{-# LANGUAGE BlockArguments #-}
 
+module Sudoku where
+import Data.Char
 import Test.QuickCheck
 
 ------------------------------------------------------------------------------
@@ -67,20 +69,34 @@ isFilled (Sudoku rows)= checkFilledRows rows
 -- | printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
 printSudoku :: Sudoku -> IO ()
-printSudoku (Sudoku rows) = putStr(printRows rows)
-    where
-      printRows [] = ""
-      printRows (currentRow:restOfRows) = printCells currentRow ++ printRows restOfRows
-      printCells [] = "\n"
-      printCells (Nothing:restOfCells) = "." ++ printCells restOfCells
-      printCells (Just n:restOfCells) = show n ++ printCells restOfCells
+printSudoku (Sudoku rows) = putStr (printRows rows)
+  where
+    printRows [] = ""
+    printRows (currentRow:restOfRows) = printCells currentRow ++ printRows restOfRows
+    printCells [] = "\n"
+    printCells (Nothing:restOfCells) = "." ++ printCells restOfCells
+    printCells (Just n:restOfCells) = show n ++ printCells restOfCells
 
 -- * B2
 
 -- | readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
-readSudoku = undefined
+readSudoku filePath = do 
+  s <- readFile filePath
+  let sudoku = sudokuFromString s
+  if isSudoku sudoku then return sudoku else error "Invalid sudoku format"
+
+sudokuFromString :: String -> Sudoku
+sudokuFromString sudokuString = Sudoku $ rowsFromStrings $ lines sudokuString
+  where
+    rowsFromStrings :: [String] -> [Row]
+    rowsFromStrings [] = []
+    rowsFromStrings (currentString:restOfStrings) = cellsFromString currentString : rowsFromStrings restOfStrings 
+    cellsFromString :: String -> [Cell]
+    cellsFromString [] = []
+    cellsFromString (currentChar:restOfChars) | currentChar == '.' = Nothing : cellsFromString restOfChars
+    cellsFromString (currentChar:restOfChars)                      = Just (digitToInt currentChar) : cellsFromString restOfChars
 
 ------------------------------------------------------------------------------
 
