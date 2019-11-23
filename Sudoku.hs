@@ -104,8 +104,10 @@ sudokuFromString sudokuString = Sudoku $ rowsFromStrings $ lines sudokuString
 
 -- | cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Cell)
-cell = undefined
-
+cell = frequency [(9, nothings), (1, justs)]
+  where
+    nothings = elements [Nothing]
+    justs    = elements [Just n | n <- [1..9]]
 
 -- * C2
 
