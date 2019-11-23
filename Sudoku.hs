@@ -67,7 +67,13 @@ isFilled (Sudoku rows)= checkFilledRows rows
 -- | printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
 printSudoku :: Sudoku -> IO ()
-printSudoku = undefined
+printSudoku (Sudoku rows) = putStr(printRows rows)
+    where
+      printRows [] = ""
+      printRows (currentRow:restOfRows) = printCells currentRow ++ printRows restOfRows
+      printCells [] = "\n"
+      printCells (Nothing:restOfCells) = "." ++ printCells restOfCells
+      printCells (Just n:restOfCells) = show n ++ printCells restOfCells
 
 -- * B2
 
