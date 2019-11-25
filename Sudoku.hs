@@ -232,10 +232,28 @@ prop_bangBangEquals_correct els (index, newEl)
 -- * E3
 
 update :: Sudoku -> Pos -> Cell -> Sudoku
-update (Sudoku rows) (x, y) cell =  undefined
+update sudoku        (y, x) _ | y < 0 || x < 0 || x > 8 || y > 8 = error "Index out of range"
+update (Sudoku rows) (y, x) cell                                 = 
+  Sudoku [
+    if y == y' 
+      then (row !!= (x, cell)) 
+      else row | (row, y') <- (zip rows [0..8])
+  ]
 
---prop_update_updated :: ...
---prop_update_updated =
+-- Own type to implement Arbitrary to get column and row values between 0 and 8
+data MyPos = MyPos Int Int
+  deriving Show
+
+instance Arbitrary MyPos where
+  arbitrary = do
+    y <- choose (0, 8)
+    x <- choose (0, 8)
+    return $ MyPos y x
+
+prop_update_updated :: Sudoku -> MyPos -> Cell -> Property
+prop_update_updated (Sudoku rows) (MyPos y x) cell = (y >= 0 && y < 9 && x >= 0 && x < 9) ==> ((updatedRows !! y) !! x) == cell
+  where
+    (Sudoku updatedRows) = update (Sudoku rows) (y, x) cell
 
 
 ------------------------------------------------------------------------------
