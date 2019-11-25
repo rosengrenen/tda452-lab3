@@ -189,12 +189,12 @@ blanks :: Sudoku -> [Pos]
 blanks (Sudoku r) = rows r 0
   where
     rows :: [Row] -> Int -> [Pos]
-    rows [] _ = []
+    rows []                      _ = []
     rows (currentRow:restOfRows) y = cells currentRow 0 y ++ rows restOfRows (y + 1)
     cells :: Row -> Int -> Int -> [Pos]
-    cells [] _ _ = []
+    cells []                    _ _ = []
     cells (Nothing:restOfCells) x y = (x, y) : (cells restOfCells (x + 1) y)
-    cells (Just _:restOfCells) x y = cells restOfCells (x + 1) y
+    cells (Just _:restOfCells)  x y = cells restOfCells (x + 1) y
 
 prop_blanks_allBlanks :: Sudoku -> Bool
 prop_blanks_allBlanks (Sudoku rows) = and [((rows !! y) !! x) == Nothing | (x, y) <- blanks (Sudoku rows)]
@@ -202,11 +202,19 @@ prop_blanks_allBlanks (Sudoku rows) = and [((rows !! y) !! x) == Nothing | (x, y
 -- * E2
 
 (!!=) :: [a] -> (Int,a) -> [a]
-xs !!= (i,y) = undefined
+[]                    !!= (_,     _)     = []
+(currentEl:restOfEls) !!= (0,     newEl) = newEl : (restOfEls !!= (-1, newEl))
+(currentEl:restOfEls) !!= (index, newEl) = currentEl : (restOfEls !!= (index - 1, newEl))
 
---prop_bangBangEquals_correct :: ...
---prop_bangBangEquals_correct =
-
+prop_bangBangEquals_correct :: [Integer] -> (Int, Integer) -> Bool
+prop_bangBangEquals_correct els (index, newEl) 
+  | index < 0           = els == (els !!= (index, newEl)) -- index out of range, nothing should change
+  | index >= length els = els == (els !!= (index, newEl)) -- index out of range, nothing should change
+  | otherwise           = take index els == take index newEls && -- preceeding elements are the same
+                          newEls !! index == newEl && -- change element is the new elements in the resulting list
+                          drop (index + 1) els == drop (index + 1) newEls -- succeeding elements are the same
+  where
+    newEls = els !!= (index, newEl)
 
 -- * E3
 
