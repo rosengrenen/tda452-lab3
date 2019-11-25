@@ -152,11 +152,21 @@ isOkayBlock block = length d == length (nub d)
 
 -- * D2
 
+square :: [Row] -> Integer -> Integer -> Block
+square rows x y = (take 3 $ drop (3 * xi) $ rows !! (0 + 3 * yi)) ++ 
+                  (take 3 $ drop (3 * xi) $ rows !! (1 + 3 * yi)) ++ 
+                  (take 3 $ drop (3 * xi) $ rows !! (2 + 3 * yi))
+  where
+    xi = fromIntegral x
+    yi = fromIntegral y
+
 blocks :: Sudoku -> [Block]
-blocks = undefined
+blocks (Sudoku rows) = [square rows r c | r <- [0..2], c <- [0..2]]    
 
 prop_blocks_lengths :: Sudoku -> Bool
-prop_blocks_lengths = undefined
+prop_blocks_lengths sudoku = length bs == 9 && and [length b == 9 | b <- bs]
+  where
+    bs = blocks sudoku  
 
 -- * D3
 
