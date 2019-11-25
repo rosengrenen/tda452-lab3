@@ -170,8 +170,21 @@ prop_blocks_lengths sudoku = length bs == 9 && and [length b == 9 | b <- bs]
 
 -- * D3
 
+isOkayLine :: Row -> Bool
+isOkayLine line = length d == length (nub d)
+  where
+    d                             = digits line
+    digits []                     = []
+    digits (Nothing:restOfCells)  = digits restOfCells
+    digits ((Just n):restOfCells) = n : digits restOfCells
+
 isOkay :: Sudoku -> Bool
-isOkay sudoku = isSudoku sudoku && and [isOkayBlock b | b <- blocks sudoku]
+isOkay (Sudoku rows) = 
+  isSudoku (Sudoku rows) && 
+  and [isOkayBlock b | b <- blocks (Sudoku rows)] && 
+  and [isOkayLine line | line <- rows] &&
+  and [isOkayLine line | line <- (transpose rows)]
+
 
 
 ---- Part A ends here --------------------------------------------------------
@@ -208,8 +221,8 @@ prop_blanks_allBlanks (Sudoku rows) = and [((rows !! y) !! x) == Nothing | (x, y
 
 prop_bangBangEquals_correct :: [Integer] -> (Int, Integer) -> Bool
 prop_bangBangEquals_correct els (index, newEl) 
-  | index < 0           = els == (els !!= (index, newEl)) -- index out of range, nothing should change
-  | index >= length els = els == (els !!= (index, newEl)) -- index out of range, nothing should change
+  | index < 0           = els == newEls -- index out of range, nothing should change
+  | index >= length els = els == newEls -- index out of range, nothing should change
   | otherwise           = take index els == take index newEls && -- preceeding elements are the same
                           newEls !! index == newEl && -- change element is the new elements in the resulting list
                           drop (index + 1) els == drop (index + 1) newEls -- succeeding elements are the same
@@ -219,7 +232,7 @@ prop_bangBangEquals_correct els (index, newEl)
 -- * E3
 
 update :: Sudoku -> Pos -> Cell -> Sudoku
-update = undefined
+update (Sudoku rows) (x, y) cell =  undefined
 
 --prop_update_updated :: ...
 --prop_update_updated =
