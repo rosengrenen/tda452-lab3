@@ -171,7 +171,7 @@ prop_blocks_lengths sudoku = length bs == 9 && and [length b == 9 | b <- bs]
 -- * D3
 
 isOkay :: Sudoku -> Bool
-isOkay = undefined
+isOkay sudoku = isSudoku sudoku && and [isOkayBlock b | b <- blocks sudoku]
 
 
 ---- Part A ends here --------------------------------------------------------
