@@ -196,9 +196,8 @@ blanks (Sudoku r) = rows r 0
     cells (Nothing:restOfCells) x y = (x, y) : (cells restOfCells (x + 1) y)
     cells (Just _:restOfCells) x y = cells restOfCells (x + 1) y
 
---prop_blanks_allBlanks :: ...
---prop_blanks_allBlanks =
-
+prop_blanks_allBlanks :: Sudoku -> Bool
+prop_blanks_allBlanks (Sudoku rows) = and [((rows !! y) !! x) == Nothing | (x, y) <- blanks (Sudoku rows)]
 
 -- * E2
 
