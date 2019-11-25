@@ -2,6 +2,7 @@
 
 module Sudoku where
 import Data.Char
+import Data.List
 import Test.QuickCheck
 
 ------------------------------------------------------------------------------
@@ -141,7 +142,12 @@ type Block = [Cell] -- a Row is also a Cell
 -- * D1
 
 isOkayBlock :: Block -> Bool
-isOkayBlock = undefined
+isOkayBlock block = length d == length (nub d)
+  where
+    d                             = digits block
+    digits []                     = []
+    digits (Nothing:restOfCells)  = digits restOfCells
+    digits ((Just n):restOfCells) = n : digits restOfCells
 
 
 -- * D2
