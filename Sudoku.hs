@@ -170,9 +170,20 @@ prop_blocks_lengths sudoku = length bs == 9 && and [length b == 9 | b <- bs]
 
 -- * D3
 
-isOkay :: Sudoku -> Bool
-isOkay sudoku = isSudoku sudoku && and [isOkayBlock b | b <- blocks sudoku]
+isOkayLine :: Row -> Bool
+isOkayLine line = length d == length (nub d)
+  where
+    d                             = digits line
+    digits []                     = []
+    digits (Nothing:restOfCells)  = digits restOfCells
+    digits ((Just n):restOfCells) = n : digits restOfCells
 
+isOkay :: Sudoku -> Bool
+isOkay (Sudoku rows) = 
+  isSudoku (Sudoku rows) && 
+  and [isOkayBlock b | b <- blocks (Sudoku rows)] && 
+  and [isOkayLine line | line <- rows] &&
+  and [isOkayLine line | line <- (transpose rows)]
 
 ---- Part A ends here --------------------------------------------------------
 ------------------------------------------------------------------------------
