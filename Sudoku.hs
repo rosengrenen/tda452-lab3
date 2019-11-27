@@ -283,12 +283,23 @@ readAndSolve filePath = do
   s <- (readSudoku filePath)
   let solution = solve s
   if solution == Nothing
-    then putStr "(no solution)"
-    else printSudoku $ fromJust solution
-
-
+  then putStr "(no solution)"
+  else printSudoku $ fromJust solution
 
 -- * F3
 
+isSolutionOf :: Sudoku -> Sudoku -> Bool
+isSolutionOf solutionSudoku baseSudoku = solutionSudokuIsValid && baseSudokuIsValid &&
+    and [
+      if (baseRows !! row) !! col == Nothing
+      then True
+      else (baseRows !! row) !! col == (solutionRows !! row) !! col
+      | row <- [0..8], col <- [0..8]
+    ]  
+  where
+    solutionRows = rows solutionSudoku
+    baseRows = rows baseSudoku
+    solutionSudokuIsValid = isSudoku solutionSudoku && isOkay solutionSudoku && blanks solutionSudoku == []
+    baseSudokuIsValid = isSudoku baseSudoku && isOkay baseSudoku
 
 -- * F4
