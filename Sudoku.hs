@@ -213,11 +213,20 @@ prop_blanks_allBlanks = (length $ blanks allBlankSudoku) == 81
 
 -- * E2
 
-(!!=) :: [a] -> (Int,a) -> [a]
-xs !!= (i,y) = undefined
+(!!=) :: [a] -> (Int, a) -> [a]
+[]                    !!= (_,     _)     = []
+(currentEl:restOfEls) !!= (0,     newEl) = newEl : restOfEls
+(currentEl:restOfEls) !!= (index, newEl) = currentEl : (restOfEls !!= (index - 1, newEl))
 
---prop_bangBangEquals_correct :: ...
---prop_bangBangEquals_correct =
+prop_bangBangEquals_correct :: [Integer] -> (Int, Integer) -> Bool
+prop_bangBangEquals_correct els (index, newEl) 
+  | index < 0           = els == (els !!= (index, newEl)) -- index out of range, nothing should change
+  | index >= length els = els == (els !!= (index, newEl)) -- index out of range, nothing should change
+  | otherwise           = take index els == take index newEls && -- preceeding elements are the same
+                          newEls !! index == newEl && -- change element is the new elements in the resulting list
+                          drop (index + 1) els == drop (index + 1) newEls -- succeeding elements are the same
+  where
+    newEls = els !!= (index, newEl)
 
 
 -- * E3
