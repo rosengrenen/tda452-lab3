@@ -3,6 +3,7 @@
 module Sudoku where
 import Data.Char
 import Data.List
+import Data.Maybe
 import Test.QuickCheck
 
 ------------------------------------------------------------------------------
@@ -260,7 +261,20 @@ prop_update_updated (Sudoku rows) (MyPos row col) cell = (updatedRows !! row) !!
 ------------------------------------------------------------------------------
 
 -- * F1
+solve' :: Sudoku -> [Sudoku]
+solve' sudoku | (not $ isSudoku sudoku) || (not $ isOkay sudoku) = []
+              | blanks sudoku == []                              = [sudoku]
+              | otherwise                                        = 
+                concat [
+                  solve' $ update sudoku (head $ blanks sudoku) (Just n) 
+                  | n <- [1..9]
+                ]
 
+solve :: Sudoku -> Maybe Sudoku
+solve sudoku | solutions == [] = Nothing
+             | otherwise       = Just (head solutions)
+  where
+    solutions = solve' sudoku
 
 -- * F2
 
