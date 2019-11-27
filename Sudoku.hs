@@ -278,6 +278,15 @@ solve sudoku | solutions == [] = Nothing
 
 -- * F2
 
+readAndSolve :: FilePath -> IO ()
+readAndSolve filePath = do
+  s <- (readSudoku filePath)
+  let solution = solve s
+  if solution == Nothing
+    then putStr "(no solution)"
+    else printSudoku $ fromJust solution
+
+
 
 -- * F3
 
