@@ -192,7 +192,7 @@ isOkay (Sudoku rows) =
 
 -- | Positions are pairs (row,column),
 -- (0,0) is top left corner, (8,8) is bottom left corner
-type Pos = (Int,Int)
+type Pos = (Int, Int)
 
 -- * E1
 
@@ -232,11 +232,30 @@ prop_bangBangEquals_correct els (index, newEl)
 -- * E3
 
 update :: Sudoku -> Pos -> Cell -> Sudoku
-update = undefined
+update (Sudoku rows) (rowNum, colNum) cell
+  | rowNum < 0 || colNum < 0 || colNum > 8 || rowNum > 8 = 
+    error "Index out of range"
+  | otherwise                                            =
+    Sudoku [ 
+      if rowNum == rowNumber
+      then row !!= (colNum, cell)
+      else row
+      | (row, rowNumber) <- (zip rows [0..8])
+    ]
 
---prop_update_updated :: ...
---prop_update_updated =
+data MyPos = MyPos Int Int
+  deriving Show
 
+instance Arbitrary MyPos where
+  arbitrary = do
+    row <- choose (0, 8)
+    col <- choose (0, 8)
+    return $ MyPos row col
+    
+prop_update_updated :: Sudoku -> MyPos -> Cell -> Bool
+prop_update_updated (Sudoku rows) (MyPos row col) cell = (updatedRows !! row) !! col == cell
+  where
+    (Sudoku updatedRows) = update (Sudoku rows) (row, col) cell
 
 ------------------------------------------------------------------------------
 
