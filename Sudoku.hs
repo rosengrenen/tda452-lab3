@@ -197,10 +197,18 @@ type Pos = (Int,Int)
 -- * E1
 
 blanks :: Sudoku -> [Pos]
-blanks = undefined
+blanks (Sudoku r) = rows r 0
+  where
+    rows :: [Row] -> Int -> [Pos]
+    rows []                      _   = []
+    rows (currentRow:restOfRows) row = cells currentRow row 0 ++ rows restOfRows (row + 1)
+    cells :: Row -> Int -> Int -> [Pos]
+    cells []                    _   _   = []
+    cells (Nothing:restOfCells) row col = (row, col) : cells restOfCells row (col + 1)
+    cells (Just _:restOfCells)  row col = cells restOfCells row (col + 1)
 
---prop_blanks_allBlanks :: ...
---prop_blanks_allBlanks =
+prop_blanks_allBlanks :: Bool
+prop_blanks_allBlanks = (length $ blanks allBlankSudoku) == 81
 
 
 -- * E2
