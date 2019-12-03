@@ -1,5 +1,3 @@
-{-# LANGUAGE BlockArguments #-}
-
 module Sudoku where
 import Data.Char
 import Data.List
@@ -39,30 +37,24 @@ example =
 -- * A1
 
 allBlankSudoku :: Sudoku
-allBlankSudoku = Sudoku [[Nothing | _ <- [1..9]] | _ <- [1..9]]
-
+allBlankSudoku = Sudoku $ replicate 9 $ replicate 9 Nothing
 -- * A2
 
 isSudoku :: Sudoku -> Bool
-isSudoku (Sudoku rows) = (length rows) == 9 && checkRows rows
+isSudoku (Sudoku rows) = (length rows) == 9 && all checkRow rows
   where
-    checkRows []                                      = True
-    checkRows (currentRow:restOfRows)                 = (length currentRow) == 9 && checkCells currentRow && checkRows restOfRows
-    checkCells []                                     = True
-    checkCells (Nothing:restOfCells)                  = checkCells restOfCells
-    checkCells (Just n:restOfCells) | n > 0 && n < 10 = checkCells restOfCells
-                                    | otherwise       = False 
+    checkRow row                       = (length row) == 9 && all checkCell row
+    checkCell Nothing                  = True
+    checkCell (Just n)                 = n > 0 && n < 10
 
 -- * A3
 
 isFilled :: Sudoku -> Bool
-isFilled (Sudoku rows)= checkFilledRows rows
+isFilled (Sudoku rows) = all checkRow rows
   where
-    checkFilledRows []                      = True
-    checkFilledRows (currentRow:restOfRows) = checkFilledCells currentRow && checkFilledRows restOfRows
-    checkFilledCells []                     = True
-    checkFilledCells (Nothing:restOfCells)  = False
-    checkFilledCells (Just _:restOfCells)   = checkFilledCells restOfCells
+    checkRow row       = all checkCell row
+    checkCell Nothing  = False
+    checkCell (Just _) = True
 
 ------------------------------------------------------------------------------
 
@@ -71,14 +63,11 @@ isFilled (Sudoku rows)= checkFilledRows rows
 -- | printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
 printSudoku :: Sudoku -> IO ()
-printSudoku (Sudoku rows) = putStr (printRows rows)
-  where
-    printRows [] = ""
-    printRows (currentRow:restOfRows) = printCells currentRow ++ printRows restOfRows
-    printCells [] = "\n"
-    printCells (Nothing:restOfCells) = "." ++ printCells restOfCells
-    printCells (Just n:restOfCells) = show n ++ printCells restOfCells
-
+printSudoku (Sudoku rows) = putStr $ concat (map printRow rows)
+    where
+      printRow row = (unlines $ map printCell row) ++ "\n"
+      printCell Nothing = "."
+      printCell (Just n) = show n
 -- * B2
 
 -- | readSudoku file reads from the file, and either delivers it, or stops
@@ -90,15 +79,10 @@ readSudoku filePath = do
   if isSudoku sudoku then return sudoku else error "Invalid sudoku format"
 
 sudokuFromString :: String -> Sudoku
-sudokuFromString sudokuString = Sudoku $ rowsFromStrings $ lines sudokuString
+sudokuFromString sudokuString = Sudoku $ map rowsFromLine $ lines sudokuString
   where
-    rowsFromStrings :: [String] -> [Row]
-    rowsFromStrings [] = []
-    rowsFromStrings (currentString:restOfStrings) = cellsFromString currentString : rowsFromStrings restOfStrings 
-    cellsFromString :: String -> [Cell]
-    cellsFromString [] = []
-    cellsFromString (currentChar:restOfChars) | currentChar == '.' = Nothing : cellsFromString restOfChars
-    cellsFromString (currentChar:restOfChars)                      = Just (digitToInt currentChar) : cellsFromString restOfChars
+    rowsFromLine line = map cellFromString line
+    cellFromString string = if string == '.' then Nothing else Just (digitToInt string)
 
 ------------------------------------------------------------------------------
 
@@ -143,13 +127,9 @@ type Block = [Cell] -- a Row is also a Cell
 -- * D1
 
 isOkayBlock :: Block -> Bool
-isOkayBlock block = length d == length (nub d)
+isOkayBlock block = length digits == length (nub digits)
   where
-    d                             = digits block
-    digits []                     = []
-    digits (Nothing:restOfCells)  = digits restOfCells
-    digits ((Just n):restOfCells) = n : digits restOfCells
-
+    digits = filter (\cell -> isJust cell) block
 
 -- * D2
 
@@ -161,30 +141,23 @@ square rows x y = (take 3 $ drop (3 * xi) $ rows !! (0 + 3 * yi)) ++
     xi = fromIntegral x
     yi = fromIntegral y
 
-blocks :: Sudoku -> [Block]
-blocks (Sudoku rows) = [square rows r c | r <- [0..2], c <- [0..2]]    
+
+blocks (Sudoku rows) = squares ++ rows ++ columns
+  where
+    squares = [square rows r c | r <- [0..2], c <- [0..2]]
+    columns = transpose rows
 
 prop_blocks_lengths :: Sudoku -> Bool
-prop_blocks_lengths sudoku = length bs == 9 && and [length b == 9 | b <- bs]
+prop_blocks_lengths sudoku = length bs == 27 && and [length b == 9 | b <- bs]
   where
-    bs = blocks sudoku  
+    bs = blocks sudoku
 
 -- * D3
-
-isOkayLine :: Row -> Bool
-isOkayLine line = length d == length (nub d)
-  where
-    d                             = digits line
-    digits []                     = []
-    digits (Nothing:restOfCells)  = digits restOfCells
-    digits ((Just n):restOfCells) = n : digits restOfCells
 
 isOkay :: Sudoku -> Bool
 isOkay (Sudoku rows) = 
   isSudoku (Sudoku rows) && 
-  and [isOkayBlock b | b <- blocks (Sudoku rows)] && 
-  and [isOkayLine line | line <- rows] &&
-  and [isOkayLine line | line <- (transpose rows)]
+  and [isOkayBlock b | b <- blocks (Sudoku rows)]
 
 ---- Part A ends here --------------------------------------------------------
 ------------------------------------------------------------------------------
