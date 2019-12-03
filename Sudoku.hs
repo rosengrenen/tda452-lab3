@@ -106,7 +106,7 @@ sudokuFromString sudokuString = Sudoku $ rowsFromStrings $ lines sudokuString
 
 -- | cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Cell)
-cell = frequency [(9, nothings), (1, justs)]
+cell = frequency [(8, nothings), (2, justs)]
   where
     nothings = elements [Nothing]
     justs    = elements [Just n | n <- [1..9]]
@@ -266,9 +266,11 @@ solve' sudoku | (not $ isSudoku sudoku) || (not $ isOkay sudoku) = []
               | blanks sudoku == []                              = [sudoku]
               | otherwise                                        = 
                 concat [
-                  solve' $ update sudoku (head $ blanks sudoku) (Just n) 
+                  solve' $ update sudoku blank (Just n) 
                   | n <- [1..9]
                 ]
+  where
+    blank = head $ blanks sudoku
 
 solve :: Sudoku -> Maybe Sudoku
 solve sudoku | solutions == [] = Nothing
@@ -295,7 +297,7 @@ isSolutionOf solutionSudoku baseSudoku = solutionSudokuIsValid && baseSudokuIsVa
       then True
       else (baseRows !! row) !! col == (solutionRows !! row) !! col
       | row <- [0..8], col <- [0..8]
-    ]  
+    ]
   where
     solutionRows = rows solutionSudoku
     baseRows = rows baseSudoku
@@ -303,3 +305,6 @@ isSolutionOf solutionSudoku baseSudoku = solutionSudokuIsValid && baseSudokuIsVa
     baseSudokuIsValid = isSudoku baseSudoku && isOkay baseSudoku
 
 -- * F4
+
+prop_SolveSound :: Sudoku -> Property
+prop_SolveSound sudoku = (isSudoku sudoku && isOkay sudoku) ==> and [solution `isSolutionOf` sudoku | solution <- solve' sudoku]
