@@ -90,7 +90,7 @@ sudokuFromString sudokuString = Sudoku $ map rowsFromLine $ lines sudokuString
 
 -- | cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Cell)
-cell = frequency [(8, nothings), (2, justs)]
+cell = frequency [(9, nothings), (1, justs)]
   where
     nothings = elements [Nothing]
     justs    = elements [Just n | n <- [1..9]]
@@ -141,7 +141,8 @@ square rows x y = (take 3 $ drop (3 * xi) $ rows !! (0 + 3 * yi)) ++
     xi = fromIntegral x
     yi = fromIntegral y
 
-block :: Sudoku -> [Block]
+
+blocks :: Sudoku -> [Block]
 blocks (Sudoku rows) = squares ++ rows ++ columns
   where
     squares = [square rows r c | r <- [0..2], c <- [0..2]]
@@ -166,118 +167,44 @@ isOkay (Sudoku rows) =
 
 -- | Positions are pairs (row,column),
 -- (0,0) is top left corner, (8,8) is bottom left corner
-type Pos = (Int, Int)
+type Pos = (Int,Int)
 
 -- * E1
 
 blanks :: Sudoku -> [Pos]
-blanks (Sudoku r) = rows r 0
-  where
-    rows :: [Row] -> Int -> [Pos]
-    rows []                      _   = []
-    rows (currentRow:restOfRows) row = cells currentRow row 0 ++ rows restOfRows (row + 1)
-    cells :: Row -> Int -> Int -> [Pos]
-    cells []                    _   _   = []
-    cells (Nothing:restOfCells) row col = (row, col) : cells restOfCells row (col + 1)
-    cells (Just _:restOfCells)  row col = cells restOfCells row (col + 1)
+blanks = undefined
 
-prop_blanks_allBlanks :: Bool
-prop_blanks_allBlanks = (length $ blanks allBlankSudoku) == 81
+--prop_blanks_allBlanks :: ...
+--prop_blanks_allBlanks =
 
 
 -- * E2
 
-(!!=) :: [a] -> (Int, a) -> [a]
-[]                    !!= (_,     _)     = []
-(currentEl:restOfEls) !!= (0,     newEl) = newEl : restOfEls
-(currentEl:restOfEls) !!= (index, newEl) = currentEl : (restOfEls !!= (index - 1, newEl))
+(!!=) :: [a] -> (Int,a) -> [a]
+xs !!= (i,y) = undefined
 
-prop_bangBangEquals_correct :: [Integer] -> (Int, Integer) -> Bool
-prop_bangBangEquals_correct els (index, newEl) 
-  | index < 0           = els == (els !!= (index, newEl)) -- index out of range, nothing should change
-  | index >= length els = els == (els !!= (index, newEl)) -- index out of range, nothing should change
-  | otherwise           = take index els == take index newEls && -- preceeding elements are the same
-                          newEls !! index == newEl && -- change element is the new elements in the resulting list
-                          drop (index + 1) els == drop (index + 1) newEls -- succeeding elements are the same
-  where
-    newEls = els !!= (index, newEl)
+--prop_bangBangEquals_correct :: ...
+--prop_bangBangEquals_correct =
 
 
 -- * E3
 
 update :: Sudoku -> Pos -> Cell -> Sudoku
-update (Sudoku rows) (rowNum, colNum) cell
-  | rowNum < 0 || colNum < 0 || colNum > 8 || rowNum > 8 = 
-    error "Index out of range"
-  | otherwise                                            =
-    Sudoku [ 
-      if rowNum == rowNumber
-      then row !!= (colNum, cell)
-      else row
-      | (row, rowNumber) <- (zip rows [0..8])
-    ]
+update = undefined
 
-data MyPos = MyPos Int Int
-  deriving Show
+--prop_update_updated :: ...
+--prop_update_updated =
 
-instance Arbitrary MyPos where
-  arbitrary = do
-    row <- choose (0, 8)
-    col <- choose (0, 8)
-    return $ MyPos row col
-    
-prop_update_updated :: Sudoku -> MyPos -> Cell -> Bool
-prop_update_updated (Sudoku rows) (MyPos row col) cell = (updatedRows !! row) !! col == cell
-  where
-    (Sudoku updatedRows) = update (Sudoku rows) (row, col) cell
 
 ------------------------------------------------------------------------------
 
 -- * F1
-solve' :: Sudoku -> [Sudoku]
-solve' sudoku | (not $ isSudoku sudoku) || (not $ isOkay sudoku) = []
-              | blanks sudoku == []                              = [sudoku]
-              | otherwise                                        = 
-                concat [
-                  solve' $ update sudoku blank (Just n) 
-                  | n <- [1..9]
-                ]
-  where
-    blank = head $ blanks sudoku
 
-solve :: Sudoku -> Maybe Sudoku
-solve sudoku | solutions == [] = Nothing
-             | otherwise       = Just (head solutions)
-  where
-    solutions = solve' sudoku
 
 -- * F2
 
-readAndSolve :: FilePath -> IO ()
-readAndSolve filePath = do
-  s <- (readSudoku filePath)
-  let solution = solve s
-  if solution == Nothing
-  then putStr "(no solution)"
-  else printSudoku $ fromJust solution
 
 -- * F3
 
-isSolutionOf :: Sudoku -> Sudoku -> Bool
-isSolutionOf solutionSudoku baseSudoku = solutionSudokuIsValid && baseSudokuIsValid &&
-    and [
-      if (baseRows !! row) !! col == Nothing
-      then True
-      else (baseRows !! row) !! col == (solutionRows !! row) !! col
-      | row <- [0..8], col <- [0..8]
-    ]
-  where
-    solutionRows = rows solutionSudoku
-    baseRows = rows baseSudoku
-    solutionSudokuIsValid = isSudoku solutionSudoku && isOkay solutionSudoku && blanks solutionSudoku == []
-    baseSudokuIsValid = isSudoku baseSudoku && isOkay baseSudoku
 
 -- * F4
-
-prop_SolveSound :: Sudoku -> Property
-prop_SolveSound sudoku = (isSudoku sudoku && isOkay sudoku) ==> and [solution `isSolutionOf` sudoku | solution <- solve' sudoku]
